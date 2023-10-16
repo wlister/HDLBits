@@ -1,0 +1,40 @@
+module top_module (
+    input clk,
+    input areset,
+    input x,
+    output reg z);
+    
+    `define S1		2'b00
+    //initially keep delaying until we reach the first 1
+    //case: LSB is 0, negation of 0 is 1, added 1 is 0. Carry is 1
+    //keep doing this until we reach the first 1
+    //on the first 1: ~1 is 0, adding carry is 1, so we need to output a 1
+
+    `define S2		2'b01
+    //output a 1 on the current state, so the last state must have been a 0 or a 1 from the start
+    
+    `define S3		2'b10 
+    //output a 0 on the current state, so the last state must have been a 1
+    
+    //loop through S2 and S3 in general
+    
+    reg[1:0] state;
+    
+    always_comb begin
+        case(state) 
+            `S2 : z = 1'b1;
+            default: z = 1'b0;
+        endcase
+    end
+    
+    always_ff@(posedge clk, posedge areset) begin
+        if(areset) state <= `S1;
+        else begin
+            case({x, state})
+                {1'b1, `S1} : state <= `S2;
+                {1'b1, `S2} : state <= `S3;
+                {1'b0, `S3} : state <= `S2;
+            endcase
+        end
+    end
+endmodule

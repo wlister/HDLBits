@@ -1,0 +1,34 @@
+module top_module (
+    input clk,
+    input areset,
+    input x,
+    output reg z
+); 
+    `define A 2'b01
+    //initially keep delaying until we reach the first 1
+    //case: LSB is 0, negation of 0 is 1, added 1 is 0. Carry is 1
+    //keep doing this until we reach the first 1
+    //on the first 1: ~1 is 0, adding carry is 1, so we need to output a 1
+    
+    `define B 2'b10
+    //this second state in the Mealy machine will keep looping (unless reset)
+    //This will output the direct complement of the bit
+    
+    reg[1:0] state;
+    
+    always_comb begin
+        case({x, state})
+            {1'b0, `B} : z <= 1'b1;
+            {1'b1, `A} : z <= 1'b1;
+            default : z <= 1'b0;
+        endcase
+    end
+    
+    always_ff@(posedge clk, posedge areset) begin
+        if(areset) state <= `A;
+        else begin
+            if(state === `A && x === 1'b1) state <= `B;
+        end
+    end
+    
+endmodule
